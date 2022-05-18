@@ -1,0 +1,117 @@
+---
+# Get facts for building host info
+- hosts: humios
+  become: true
+  serial: 10
+  pre_tasks:
+    - name: Gather facts from ALL hosts (regardless of limit or tags)
+      tags: always
+      setup:
+              #delegate_to: "{{ item }}"
+      delegate_facts: True
+      when: hostvars[item]['ansible_' + humio_network_interface] is not defined
+      with_items: "{{ groups['humios'] }}"
+#
+- hosts: zookeepers
+  become: true
+  serial: 10
+  pre_tasks:
+    - name: Gather facts from ALL hosts (regardless of limit or tags)
+      tags: always
+      setup:
+              #delegate_to: "{{ item }}"
+      delegate_facts: True
+      when: hostvars[item]['ansible_' + humio_network_interface] is not defined
+      with_items: "{{ groups['zookeepers'] }}"
+
+#
+- hosts: kafkas
+  become: true
+  serial: 10
+  pre_tasks:
+    - name: Gather facts from ALL hosts (regardless of limit or tags)
+      tags: always
+      setup:
+              #delegate_to: "{{ item }}"
+      delegate_facts: True
+      when: hostvars[item]['ansible_' + humio_network_interface] is not defined
+      with_items: "{{ groups['kafkas'] }}"
+
+
+############################################
+#
+# Install Java + Zookeeper roles on zookeeper hosts
+#
+- hosts: zookeepers
+  tags: zookeeper
+  become: true
+  roles:
+    - role: humio.java
+    - role: humio.zookeeper
+      zookeeper_hosts: "
+          {%- set ips = [] %}
+          {%- for host in groups['zookeepers'] %}
+          {{- ips.append(dict(id=loop.index, host=host, ip=hostvars[host]['private_ip_address'])) }}
+          {%- endfor %}
+          {{- ips -}}"
+
+############################################
+#
+# Install Java + Kafka roles on kafka hosts
+#
+- hosts: kafkas
+  tags: kafka
+  serial: 1
+  become: true
+  roles:
+    - role: humio.java
+    - role: humio.kafka
+      zookeeper_hosts: "
+          {%- set ips = [] %}
+          {%- for host in groups['zookeepers'] %}
+          {{- ips.append(dict(id=loop.index, host=host, ip=hostvars[host]['private_ip_address'])) }}
+          {%- endfor %}
+          {{- ips -}}"
+      kafka_broker_id: "{{ ansible_local['cluster_index'] }}"
+      kafka_listeners:
+        - host: "{{ hostvars[inventory_hostname]['private_ip_address'] }}"
+
+############################################
+#
+# Install Java + Humio roles on humio hosts
+#
+- hosts: humios
+  tags: humio
+  serial: 1
+  become: true
+  roles:
+    - role: humio.java
+    - role: humio.server
+      zookeeper_hosts: "
+          {%- set ips = [] %}
+          {%- for host in groups['zookeepers'] %}
+          {{- ips.append(dict(id=loop.index, host=host, ip=hostvars[host]['private_ip_address'])) }}
+          {%- endfor %}
+          {{- ips -}}"
+      kafka_hosts: "
+          {%- set ips = [] %}
+          {%- for host in groups['kafkas'] %}
+          {{- ips.append(dict(id=loop.index, host=host, ip=hostvars[host]['private_ip_address'])) }}
+          {%- endfor %}
+          {{- ips -}}"
+      humio_version: 1.38.0
+      humio_config:
+        "all": |
+                DIGEST_REPLICATION_FACTOR=2
+                STORAGE_REPLICATION_FACTOR=2
+                ZONE=us-east-2-a
+                S3_STORAGE_BUCKET=humio-cx-grant-humio-bootstrap
+                S3_STORAGE_ENCRYPTION_KEY=1119e390edjsajju340jrfmcdls09
+                S3_STORAGE_REGION=us-east-2
+                LOCAL_STORAGE_MIN_AGE_DAYS=0
+                USING_EPHEMERAL_DISKS=true
+                LOCAL_STORAGE_PERCENTAGE=80
+                ZOOKEEPER_PREFIX_FOR_NODE_UUID=/humio_bootstrap_c1_
+                ZOOKEEPER_URL_FOR_NODE_UUID={% for host in zookeeper_hosts | sort(attribute="ip") %}{{ host.ip }}:{{ host.port | default('2181') }}{% if not loop.last %},{% endif %}{% endfor %}
+        "0": "EXTERNAL_URL=http://{{ hostvars[inventory_hostname]['ansible_' + humio_network_interface].ipv4.address }}:8080"
+        "1": "EXTERNAL_URL=http://{{ hostvars[inventory_hostname]['ansible_' + humio_network_interface].ipv4.address }}:8081"
