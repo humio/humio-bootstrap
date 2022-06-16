@@ -14,7 +14,7 @@ module "vpc_endpoints" {
       service             = "ssm"
       private_dns_enabled = true
       subnet_ids          = module.vpc.private_subnets
-      security_group_ids  = [aws_security_group.vpc_tls.id]
+      security_group_ids  = [module.security_group.security_group_id]
     },
     ssmmessages = {
       service             = "ssmmessages"
@@ -25,7 +25,7 @@ module "vpc_endpoints" {
       service             = "ec2"
       private_dns_enabled = true
       subnet_ids          = module.vpc.private_subnets
-      security_group_ids  = [aws_security_group.vpc_tls.id]
+      security_group_ids  = [module.security_group.security_group_id]
     },
     ec2messages = {
       service             = "ec2messages"
@@ -40,7 +40,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "3.14.0"
 
-  name                 = local.vpc_name
+  name                 = "${local.vpc_name}-${random_string.random_suffix.result}"
   cidr                 = var.vpc_cidr_block
   azs                  = ["${local.region}a", "${local.region}b", "${local.region}c"]
   private_subnets      = var.private_subnets

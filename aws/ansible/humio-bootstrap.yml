@@ -1,0 +1,93 @@
+---
+############################################
+#
+# Install Java + Zookeeper roles on zookeeper hosts
+#
+- name: Install and Configure Zookeeper
+  hosts: "{{ humio_cluster_id }}:&zookeepers"
+  tags: zookeeper
+  become: true
+  roles:
+    - role: humio.java
+    - role: humio.zookeeper
+      vars:
+        zookeeper_check_enabled: false
+      zookeeper_hosts: "
+          {%- set ips = [] %}
+          {%- for host in groups['zookeepers'] %}
+          {%- if host in groups[hostvars[host]['humio_cluster_id']] %}
+          {{- ips.append(dict(id=hostvars[host]['humio_cluster_index'], host=host, ip=hostvars[host]['private_ip_address'])) }}
+          {%- endif %}
+          {%- endfor %}
+          {{- ips -}}"
+
+############################################
+#
+# Install Java + Kafka roles on kafka hosts
+#
+- name: Install and Configure Kakfa
+  hosts: "{{ humio_cluster_id }}:&kafkas"
+  tags: kafka
+  serial: 1
+  become: true
+  roles:
+    - role: humio.java
+    - role: humio.kafka
+      zookeeper_hosts: "
+          {%- set ips = [] %}
+          {%- for host in groups['zookeepers'] %}
+          {%- if host in groups[hostvars[host]['humio_cluster_id']] %}
+          {{- ips.append(dict(id=hostvars[host]['humio_cluster_index'], host=host, ip=hostvars[host]['private_ip_address'])) }}
+          {%- endif %}
+          {%- endfor %}
+          {{- ips -}}"
+      kafka_broker_id: "{{ hostvars[inventory_hostname]['humio_cluster_index']}}"
+      kafka_broker_rack: "{{ hostvars[inventory_hostname]['placement']['availability_zone'] }}"
+      kafka_listeners:
+        - host: "{{ hostvars[inventory_hostname]['private_ip_address'] }}"
+
+############################################
+#
+# Install Java + Humio roles on humio hosts
+#
+- name: Install Java and Humio
+  hosts: "{{ humio_cluster_id }}:&humios"
+  tags: humio
+  serial: 1
+  become: true
+  vars:
+     humio_bucket_storage: "{{ humio_cluster_id |replace('_', '-') }}-bucket-storage"
+  roles:
+    - role: humio.java
+    - role: humio.server
+      zookeeper_hosts: "
+          {%- set ips = [] %}
+          {%- for host in groups['zookeepers'] %}
+          {%- if host in groups[hostvars[host]['humio_cluster_id']] %}
+
+          {{- ips.append(dict(id=hostvars[host]['humio_cluster_index'], host=host, ip=hostvars[host]['private_ip_address'])) }}
+          {%- endif %}
+          {%- endfor %}
+          {{- ips -}}"
+      kafka_hosts: "
+          {%- set ips = [] %}
+          {%- for host in groups['kafkas'] %}
+          {%- if host in groups[hostvars[host]['humio_cluster_id']] %}
+          {{- ips.append(dict(id=loop.index, host=host, ip=hostvars[host]['private_ip_address'])) }}
+          {%- endif %}
+          {%- endfor %}
+          {{- ips -}}"
+      humio_version: 1.38.0
+      humio_ephemeral: true
+      humio_config:
+        "all": |
+                # Authentication to single user
+                AUTHENTICATION_METHOD=single-user
+                SINGLE_USER_PASSWORD=mydeveloperpassword
+
+                ZONE={{ hostvars[inventory_hostname]['placement']['availability_zone'] }}
+                ZOOKEEPER_PREFIX_FOR_NODE_UUID=/{{ hostvars[inventory_hostname]['humio_cluster_id'] }}_
+                ZOOKEEPER_URL_FOR_NODE_UUID={% for host in zookeeper_hosts | sort(attribute="ip") %}{{ host.ip }}:{{ host.port | default('2181') }}{% if not loop.last %},{% endif %}{% endfor %}
+
+                {{ lookup('template', './humio.conf.j2') }}
+        "0": "EXTERNAL_URL=http://{{ hostvars[inventory_hostname]['private_ip_address'] }}:8080"
