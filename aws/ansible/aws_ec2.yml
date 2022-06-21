@@ -1,0 +1,28 @@
+---
+plugin: aws_ec2
+
+include_filters:
+- tag:humio-bootstrap-humio:
+  - 'true'
+- tag:humio-bootstrap-kafka:
+  - 'true'
+- tag:humio-bootstrap-zookeeper:
+  - 'true'
+- tag:humio-cluster-id:
+  - defined
+- tag:humio-cluster-index:
+  - defined
+strict: False
+compose:
+  humio_cluster_index: tags['humio-cluster-index']
+  humio_cluster_id: tags['humio-cluster-id'] 
+  aws_region: region
+  aws_zone: zone
+keyed_groups:
+  - key: tags['humio-cluster-id']
+    separator: ''
+groups:
+  humio_cluster_id: (tags['humio-cluster-id'] is defined)
+  humios: (tags['humio-bootstrap-humio'] is defined and tags['humio-bootstrap-humio'] == 'true' and tags['humio-cluster-id'] is defined)
+  kafkas: (tags['humio-bootstrap-kafka'] is defined and tags['humio-bootstrap-kafka'] == 'true' and tags['humio-cluster-id'] is defined)
+  zookeepers: (tags['humio-bootstrap-zookeeper'] is defined and tags['humio-bootstrap-zookeeper'] == 'true' and tags['humio-cluster-id'] is defined) 

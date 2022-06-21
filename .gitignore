@@ -1,0 +1,6 @@
+**/ansible.tar.gz
+*.tfstate
+.terraform*lock*
+.terraform
+*.tfstate.backup
+*.tfstate.*.backup
