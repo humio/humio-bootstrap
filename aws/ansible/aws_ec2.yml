@@ -16,8 +16,8 @@ strict: False
 compose:
   humio_cluster_index: tags['humio-cluster-index']
   humio_cluster_id: tags['humio-cluster-id'] 
-  aws_region: region
-  aws_zone: zone
+  aws_region: placement.region
+  aws_zone: placement.availability-zone
 keyed_groups:
   - key: tags['humio-cluster-id']
     separator: ''
