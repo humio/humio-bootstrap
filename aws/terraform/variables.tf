@@ -11,7 +11,7 @@ variable "public_subnets" {
   default = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
 }
 variable "vpc_external_access_cidr" {
-  default = ["165.225.243.21/32"]
+  default = ["198.51.100.0/24"]
 }
 variable "sg_name_internal" {
   default = "humio-bootstrap-internal"
