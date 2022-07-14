@@ -32,7 +32,6 @@ resource "random_string" "random_suffix" {
 
 resource "aws_s3_bucket" "bucket_storage" {
   bucket = "humio-${random_string.random_suffix.result}-bucket-storage"
-  force_destroy = true
   tags = local.tags
 }
 
