@@ -39,14 +39,3 @@ resource "aws_s3_bucket_acl" "bucket_storage" {
   bucket = aws_s3_bucket.bucket_storage.id
   acl    = "private"
 }
-
-
-
-
-# resource "null_resource" "ansible" {
-#  provisioner "local-exec" {
-#    working_dir = path.module
-#    command     = "tar -C ../ansible -czf ansible.tar.gz ."
-#    interpreter = ["/bin/bash", "-c"]
-#  }
-# }
