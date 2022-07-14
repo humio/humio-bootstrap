@@ -155,9 +155,9 @@ ansible() {
 
   # local -r local_ip=$(hostname -i)
   # pip3 install ansible==2.9.13 requests boto3
-  aws s3 cp s3://$humio_bootstrap_config/ansible.tar.gz "${tmp_dir}"
+  aws s3 cp s3://$humio_bootstrap_config/ansible.zip "${tmp_dir}"
   cd "${tmp_dir}"
-  tar xzf ansible.tar.gz
+  unzip ansible.zip
   mkdir group_vars
   mv group_vars.yml group_vars/all.yml
 
