@@ -11,7 +11,7 @@ variable "public_subnets" {
   default = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
 }
 variable "vpc_external_access_cidr" {
-  default = ["165.225.243.21/32"]
+  default = ["198.51.100.0/24"]
 }
 variable "sg_name_internal" {
   default = "humio-bootstrap-internal"
@@ -33,8 +33,14 @@ variable "bucket_prefix" {
   default = "humio-bootstrap"
 }
 variable "humio_instance_type" {
-  default = "i3.4xlarge"
+  default = "i3.8xlarge"
 }
 variable "kafka_instance_type" {
-  default = "m5.xlarge"
+  default = "m5.2xlarge"
+}
+variable "humio_instance_count" {
+  default = 6
+}
+variable "kafka_instance_count" {
+  default = 3
 }
