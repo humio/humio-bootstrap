@@ -8,6 +8,8 @@ locals {
   region                    = var.region
   humio_instance_type       = var.humio_instance_type
   kafka_instance_type       = var.kafka_instance_type
+  humio_instance_count      = var.humio_instance_count
+  kafka_instance_count      = var.kafka_instance_count
   tags = {
     "Purpose" = "HumioBootstrap"
   }

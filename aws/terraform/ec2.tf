@@ -24,7 +24,7 @@ module "ec2_humio" {
   version = "4.0.0"
 
   name                        = "humio-${random_string.random_suffix.result}-humio-${count.index}"
-  count                       = 3
+  count                       = local.humio_instance_count
   user_data_replace_on_change = true
   user_data                   = file("${path.module}/user-data.sh")
   ami                         = data.aws_ami.ubuntu.id
@@ -49,7 +49,7 @@ module "ec2_kafka" {
   version = "4.0.0"
 
   name                        = "humio-${random_string.random_suffix.result}-kafka-${count.index}"
-  count                       = 3
+  count                       = local.kafka_instance_count
   user_data_replace_on_change = true
   user_data                   = file("${path.module}/user-data.sh")
   ami                         = data.aws_ami.ubuntu.id

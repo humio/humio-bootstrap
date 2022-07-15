@@ -33,8 +33,14 @@ variable "bucket_prefix" {
   default = "humio-bootstrap"
 }
 variable "humio_instance_type" {
-  default = "i3.4xlarge"
+  default = "i3.8xlarge"
 }
 variable "kafka_instance_type" {
-  default = "m5.xlarge"
+  default = "m5.2xlarge"
+}
+variable "humio_instance_count" {
+  default = 6
+}
+variable "kafka_instance_count" {
+  default = 3
 }
