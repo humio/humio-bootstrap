@@ -10,6 +10,7 @@ locals {
   kafka_instance_type       = var.kafka_instance_type
   humio_instance_count      = var.humio_instance_count
   kafka_instance_count      = var.kafka_instance_count
+  kafka_disk_size           = var.kafka_disk_size
   tags = {
     "Purpose" = "HumioBootstrap"
   }

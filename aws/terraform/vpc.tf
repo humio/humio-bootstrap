@@ -56,7 +56,3 @@ module "vpc" {
     Name = local.vpc_name
   }
 }
-output "Loadbalancer-address" {
-  description = "DNS address of the loadbalancer"
-  value = aws_lb.lb.dns_name
-}

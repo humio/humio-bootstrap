@@ -27,20 +27,23 @@ variable "humio_instance_name" {
   default = "humio-bootstrap"
 }
 variable "region" {
-  default = "us-east-1"
+  default = "us-east-2"
 }
 variable "bucket_prefix" {
   default = "humio-bootstrap"
 }
 variable "humio_instance_type" {
-  default = "i3.8xlarge"
+  default = "i3.4xlarge"
 }
 variable "kafka_instance_type" {
-  default = "m5.2xlarge"
+  default = "m5.xlarge"
 }
 variable "humio_instance_count" {
   default = 6
 }
 variable "kafka_instance_count" {
   default = 3
+}
+variable "kafka_disk_size" {
+  default = "200"
 }
