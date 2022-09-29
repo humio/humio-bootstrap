@@ -36,20 +36,12 @@ resource "aws_security_group" "alb_sg" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    description = "8080 from the world"
+    description = "8080 from the the external access cidr"
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = [join(",",local.vpc_external_access_cidr)]
   }
-  egress {
-    description = "8080 from the world"
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    security_groups = [module.security_group.security_group_id]
-  }
-  
 
   tags = local.tags
 }
@@ -57,13 +49,13 @@ resource "aws_security_group" "alb_sg" {
 
 
 resource "aws_security_group" "vpc_internal_http" {
-  name_prefix = "${local.sg_name_external}-vpc-http"
+  name_prefix = "${local.sg_name_internal}-vpc-http"
   description = "Allow HTTP inbound traffic from alb"
   vpc_id      = module.vpc.vpc_id
 
   ingress {
     description = "8080 from ALBs"
-    from_port   = 0
+    from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
     security_groups = [aws_security_group.alb_sg.id]

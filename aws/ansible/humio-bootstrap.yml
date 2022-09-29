@@ -77,8 +77,6 @@
           {%- endif %}
           {%- endfor %}
           {{- ips -}}"
-      humio_version: 1.38.0
-      humio_ephemeral: true
       humio_config:
         "all": |
                 # Authentication to single user
